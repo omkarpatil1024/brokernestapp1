@@ -2,6 +2,7 @@ import React from "react";
 import { TrendingUp } from "lucide-react";
 import { NavigationLinks } from "./NavigationLinks";
 import { UserInfo } from "./UserInfo";
+import { useBrokerContext } from "@/contexts/BrokerContext";
 
 interface DesktopSidebarProps {
   currentPath: string;
@@ -9,6 +10,7 @@ interface DesktopSidebarProps {
 }
 
 export function DesktopSidebar({ currentPath, onLogout }: DesktopSidebarProps) {
+  const { selectedBroker } = useBrokerContext();
   return (
     <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
       <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
@@ -22,6 +24,7 @@ export function DesktopSidebar({ currentPath, onLogout }: DesktopSidebarProps) {
             </span>
           </div>
         </div>
+
         <NavigationLinks currentPath={currentPath} />
         <UserInfo onLogout={onLogout} />
       </div>

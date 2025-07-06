@@ -31,7 +31,6 @@ export interface OrderFormData {
   product: 'CNC' | 'MIS' | 'NRML';
   quantity: number;
   price?: number;
-  validity: 'DAY' | 'IOC' | 'GTT';
 }
 
 export interface User {
@@ -44,3 +43,9 @@ export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
 }
+
+export type Stock = {
+  symbol: string;
+  ltp: number;
+  companyName?: string;
+};

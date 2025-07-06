@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { useOrders } from "./useOrders";
 
 export default function Orders() {
-  const { orders, portfolio, isLoading } = useOrders();
+  const { orders, portfolio, isLoading, handleStockClick } = useOrders();
 
   if (isLoading) {
     return (
@@ -67,13 +67,13 @@ export default function Orders() {
           <div className="grid grid-cols-2 gap-6">
             <div className="text-center p-4 bg-green-50 rounded-xl">
               <div className="text-2xl font-bold text-green-600">
-                +₹{portfolio?.realizedPnL || '0'}
+                +₹{portfolio?.realizedPnL || "0"}
               </div>
               <div className="text-sm text-green-700">Realized P&L</div>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-xl">
               <div className="text-2xl font-bold text-blue-600">
-                +₹{portfolio?.unrealizedPnL || '0'}
+                +₹{portfolio?.unrealizedPnL || "0"}
               </div>
               <div className="text-sm text-blue-700">Unrealized P&L</div>
             </div>
@@ -88,21 +88,26 @@ export default function Orders() {
         </CardHeader>
         <CardContent className="space-y-4">
           {orders.map((order, index) => {
-            const isBuy = order.orderType === 'BUY';
-            const totalValue = order.price 
+            const isBuy = order.orderType === "BUY";
+            const totalValue = order.price
               ? (parseFloat(order.price) * order.quantity).toFixed(2)
-              : 'N/A';
-            
+              : "N/A";
+
             return (
               <div
                 key={order.id}
-                className="p-4 border border-gray-200 rounded-lg"
+                className="p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-sm cursor-pointer transition-all"
+                onClick={() =>
+                  handleStockClick(order.symbol, parseFloat(order.price || "0"))
+                }
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                      isBuy ? 'bg-green-100' : 'bg-red-100'
-                    }`}>
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                        isBuy ? "bg-green-100" : "bg-red-100"
+                      }`}
+                    >
                       {isBuy ? (
                         <ArrowUp className={`text-green-600 h-4 w-4`} />
                       ) : (
@@ -110,16 +115,20 @@ export default function Orders() {
                       )}
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{order.symbol}</div>
+                      <div className="font-semibold text-gray-900">
+                        {order.symbol}
+                      </div>
                       <div className="text-sm text-gray-500">
                         {order.orderType} • {order.orderMode} Order
                       </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-green-600">{order.status}</div>
+                    <div className="font-semibold text-green-600">
+                      {order.status}
+                    </div>
                     <div className="text-sm text-gray-500">
-                      {format(new Date(order.createdAt), 'MMM dd, h:mm a')}
+                      {format(new Date(order.createdAt), "MMM dd, h:mm a")}
                     </div>
                   </div>
                 </div>
@@ -130,7 +139,9 @@ export default function Orders() {
                   </div>
                   <div>
                     <div className="text-gray-500">Price</div>
-                    <div className="font-medium">₹{order.price || 'Market'}</div>
+                    <div className="font-medium">
+                      ₹{order.price || "Market"}
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-500">Total</div>
@@ -140,7 +151,7 @@ export default function Orders() {
               </div>
             );
           })}
-          
+
           {orders.length === 0 && (
             <div className="p-8 text-center text-gray-500">
               No orders found. Start trading to see your order history.

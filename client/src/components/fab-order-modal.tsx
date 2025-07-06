@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,24 +14,32 @@ import {
   SelectValue,
 } from "./ui/select";
 
-interface OrderPadProps {
+interface FabOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  stock: {
+  orderType: "BUY" | "SELL";
+  stock?: {
     symbol: string;
     ltp: number;
     companyName?: string;
   } | null;
-  defaultOrderType?: "BUY" | "SELL";
 }
 
-export function OrderPad({
+const mockStocks = [
+  { symbol: "RELIANCE", ltp: 2456.75, companyName: "Reliance Industries Ltd" },
+  { symbol: "TCS", ltp: 3567.50, companyName: "Tata Consultancy Services" },
+  { symbol: "HDFCBANK", ltp: 1678.30, companyName: "HDFC Bank Ltd" },
+  { symbol: "INFY", ltp: 1456.80, companyName: "Infosys Limited" },
+  { symbol: "ICICIBANK", ltp: 945.60, companyName: "ICICI Bank Ltd" },
+];
+
+export function FabOrderModal({
   isOpen,
   onClose,
-  stock,
-  defaultOrderType = "BUY",
-}: OrderPadProps) {
-  const [orderType, setOrderType] = useState<"BUY" | "SELL">(defaultOrderType);
+  orderType,
+  stock = null,
+}: FabOrderModalProps) {
+  const [selectedStock, setSelectedStock] = useState(stock || mockStocks[0]);
   const [formData, setFormData] = useState<Partial<OrderFormData>>({
     orderMode: "MARKET",
     product: "CNC",
@@ -40,16 +48,18 @@ export function OrderPad({
 
   const { toast } = useToast();
 
-  const handleOrderTypeChange = (type: "BUY" | "SELL") => {
-    setOrderType(type);
-  };
+  useEffect(() => {
+    if (stock) {
+      setSelectedStock(stock);
+    }
+  }, [stock]);
 
   const handleFormChange = (field: keyof OrderFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePlaceOrder = async () => {
-    if (!stock || !formData.quantity) {
+    if (!selectedStock || !formData.quantity) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -59,12 +69,12 @@ export function OrderPad({
     }
 
     const orderData: OrderFormData = {
-      symbol: stock.symbol,
+      symbol: selectedStock.symbol,
       orderType,
       orderMode: formData.orderMode || "MARKET",
       product: formData.product || "CNC",
       quantity: formData.quantity,
-      price: formData.orderMode === "MARKET" ? stock.ltp : formData.price,
+      price: formData.orderMode === "MARKET" ? selectedStock.ltp : formData.price,
     };
 
     try {
@@ -88,14 +98,14 @@ export function OrderPad({
   };
 
   const totalAmount =
-    stock && formData.quantity
+    selectedStock && formData.quantity
       ? (formData.orderMode === "MARKET"
-          ? stock.ltp * formData.quantity
-          : (formData.price || stock.ltp) * formData.quantity
+          ? selectedStock.ltp * formData.quantity
+          : (formData.price || selectedStock.ltp) * formData.quantity
         ).toFixed(2)
       : "0.00";
 
-  if (!stock) return null;
+  if (!selectedStock) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -103,51 +113,28 @@ export function OrderPad({
         <div className="border-b border-gray-200 pb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                <span className="text-gray-600 font-bold">
-                  {stock.symbol.slice(0, 2)}
-                </span>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                orderType === "BUY" ? "bg-green-100" : "bg-red-100"
+              }`}>
+                {orderType === "BUY" ? (
+                  <ArrowUp className="h-6 w-6 text-green-600" />
+                ) : (
+                  <ArrowDown className="h-6 w-6 text-red-600" />
+                )}
               </div>
               <div>
                 <div className="text-xl font-bold text-gray-900">
-                  {stock.symbol}
+                  {orderType} {selectedStock.symbol}
                 </div>
                 <div className="text-sm text-gray-500">
-                  ₹{stock.ltp.toFixed(2)}
+                  ₹{selectedStock.ltp.toFixed(2)}
                 </div>
               </div>
             </div>
           </div>
-
-          <div className="flex bg-gray-100 rounded-xl p-1">
-            <Button
-              variant={orderType === "BUY" ? "default" : "ghost"}
-              className={`flex-1 ${
-                orderType === "BUY"
-                  ? "bg-green-500 hover:bg-green-600 text-white"
-                  : "text-gray-600"
-              }`}
-              onClick={() => handleOrderTypeChange("BUY")}
-            >
-              <ArrowUp className="mr-2 h-4 w-4" />
-              BUY
-            </Button>
-            <Button
-              variant={orderType === "SELL" ? "default" : "ghost"}
-              className={`flex-1 ${
-                orderType === "SELL"
-                  ? "bg-red-500 hover:bg-red-600 text-white"
-                  : "text-gray-600"
-              }`}
-              onClick={() => handleOrderTypeChange("SELL")}
-            >
-              <ArrowDown className="mr-2 h-4 w-4" />
-              SELL
-            </Button>
-          </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium text-gray-700">
@@ -240,7 +227,7 @@ export function OrderPad({
             onClick={handlePlaceOrder}
             disabled={!formData.quantity}
           >
-            {orderType}
+            {orderType} NOW
           </Button>
         </div>
       </DialogContent>

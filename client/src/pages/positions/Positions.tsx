@@ -1,20 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePositions } from "./usePositions";
-import { DraggableFAB } from "@/components/draggable-fab";
 import type { Position } from "@shared/schema";
 
 export default function Positions() {
-  const { positions, portfolio, isLoading } = usePositions();
-  const [orderPadOpen, setOrderPadOpen] = useState(false);
-  const [selectedStock, setSelectedStock] = useState<{
-    symbol: string;
-    ltp: number;
-    companyName: string;
-  } | null>(null);
-  const [defaultOrderType, setDefaultOrderType] = useState<'BUY' | 'SELL'>('BUY');
+  const { positions, portfolio, isLoading , handleStockClick} = usePositions();
 
+    
   const calculatePnL = (position: Position) => {
     const currentValue = parseFloat(position.ltp) * position.quantity;
     const entryValue = parseFloat(position.entryPrice) * position.quantity;
@@ -34,36 +27,7 @@ export default function Positions() {
     };
   };
 
-  const handleStockClick = (symbol: string, ltp: number, companyName: string) => {
-    setSelectedStock({ symbol, ltp, companyName });
-    setOrderPadOpen(true);
-  };
 
-  const getFirstStock = () => {
-    if (positions.length > 0) {
-      const firstPosition = positions[0];
-      return {
-        symbol: firstPosition.symbol,
-        ltp: parseFloat(firstPosition.ltp),
-        companyName: firstPosition.companyName
-      };
-    }
-    return { symbol: 'INFY', ltp: 1456.80, companyName: 'Infosys Limited' };
-  };
-
-  const handleQuickBuy = () => {
-    const stock = getFirstStock();
-    setSelectedStock(stock);
-    setDefaultOrderType('BUY');
-    setOrderPadOpen(true);
-  };
-
-  const handleQuickSell = () => {
-    const stock = getFirstStock();
-    setSelectedStock(stock);
-    setDefaultOrderType('SELL');
-    setOrderPadOpen(true);
-  };
 
   if (isLoading) {
     return (
@@ -138,7 +102,6 @@ export default function Positions() {
         </CardContent>
       </Card>
 
-      {/* Active Positions */}
       <Card>
         <CardHeader>
           <CardTitle>Active Positions</CardTitle>
@@ -212,3 +175,5 @@ export default function Positions() {
     </div>
   );
 }
+
+

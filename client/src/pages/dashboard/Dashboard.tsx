@@ -1,61 +1,23 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboard } from "./useDashboard";
 import type { Holding } from "@shared/schema";
 
 export default function Dashboard() {
-  const { holdings, portfolio, isLoading } = useDashboard();
-  const [orderPadOpen, setOrderPadOpen] = useState(false);
-  const [selectedStock, setSelectedStock] = useState<{
-    symbol: string;
-    ltp: number;
-    companyName: string;
-  } | null>(null);
-  const [defaultOrderType, setDefaultOrderType] = useState<'BUY' | 'SELL'>('BUY');
-
-  const handleStockClick = (symbol: string, ltp: number, companyName: string) => {
-    setSelectedStock({ symbol, ltp, companyName });
-    setOrderPadOpen(true);
-  };
+  const { holdings, portfolio, isLoading, handleStockClick } = useDashboard();
 
   const calculatePnL = (holding: Holding) => {
     const currentValue = parseFloat(holding.ltp) * holding.quantity;
     const investedValue = parseFloat(holding.avgPrice) * holding.quantity;
     const pnl = currentValue - investedValue;
     const pnlPercent = (pnl / investedValue) * 100;
-    
+
     return {
       pnl: pnl.toFixed(2),
       pnlPercent: pnlPercent.toFixed(2),
       currentValue: currentValue.toFixed(2),
     };
-  };
-
-  const getFirstStock = () => {
-    if (holdings.length > 0) {
-      const firstHolding = holdings[0];
-      return {
-        symbol: firstHolding.symbol,
-        ltp: parseFloat(firstHolding.ltp),
-        companyName: firstHolding.companyName
-      };
-    }
-    return { symbol: 'RELIANCE', ltp: 2456.75, companyName: 'Reliance Industries Limited' };
-  };
-
-  const handleQuickBuy = () => {
-    const stock = getFirstStock();
-    setSelectedStock(stock);
-    setDefaultOrderType('BUY');
-    setOrderPadOpen(true);
-  };
-
-  const handleQuickSell = () => {
-    const stock = getFirstStock();
-    setSelectedStock(stock);
-    setDefaultOrderType('SELL');
-    setOrderPadOpen(true);
   };
 
   if (isLoading) {
@@ -120,29 +82,39 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                ₹{portfolio?.totalValue || '0'}
+                ₹{portfolio?.totalValue || "0"}
               </div>
               <div className="text-sm text-gray-500">Total Value</div>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">
-                ₹{portfolio?.totalInvested || '0'}
+                ₹{portfolio?.totalInvested || "0"}
               </div>
               <div className="text-sm text-gray-500">Invested</div>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-bold ${
-                parseFloat(portfolio?.totalPnL || '0') >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {parseFloat(portfolio?.totalPnL || '0') >= 0 ? '+' : ''}₹{portfolio?.totalPnL || '0'}
+              <div
+                className={`text-2xl font-bold ${
+                  parseFloat(portfolio?.totalPnL || "0") >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {parseFloat(portfolio?.totalPnL || "0") >= 0 ? "+" : ""}₹
+                {portfolio?.totalPnL || "0"}
               </div>
               <div className="text-sm text-gray-500">Total P&L</div>
             </div>
             <div className="text-center">
-              <div className={`text-2xl font-bold ${
-                parseFloat(portfolio?.pnlPercentage || '0') >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {parseFloat(portfolio?.pnlPercentage || '0') >= 0 ? '+' : ''}{portfolio?.pnlPercentage || '0'}%
+              <div
+                className={`text-2xl font-bold ${
+                  parseFloat(portfolio?.pnlPercentage || "0") >= 0
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                {parseFloat(portfolio?.pnlPercentage || "0") >= 0 ? "+" : ""}
+                {portfolio?.pnlPercentage || "0"}%
               </div>
               <div className="text-sm text-gray-500">Returns</div>
             </div>
@@ -159,12 +131,18 @@ export default function Dashboard() {
           {holdings.map((holding, index) => {
             const { pnl, pnlPercent, currentValue } = calculatePnL(holding);
             const isProfitable = parseFloat(pnl) >= 0;
-            
+
             return (
               <div
                 key={holding.id}
                 className="p-4 border border-gray-200 rounded-lg hover:border-primary hover:shadow-sm cursor-pointer transition-all"
-                onClick={() => handleStockClick(holding.symbol, parseFloat(holding.ltp), holding.companyName)}
+                onClick={() =>
+                  handleStockClick(
+                    holding.symbol,
+                    parseFloat(holding.ltp),
+                    holding.companyName
+                  )
+                }
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-3">
@@ -174,15 +152,28 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900">{holding.symbol}</div>
-                      <div className="text-sm text-gray-500">{holding.companyName}</div>
-                      <div className="text-sm text-gray-500">{holding.quantity} shares</div>
+                      <div className="font-semibold text-gray-900">
+                        {holding.symbol}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {holding.companyName}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {holding.quantity} shares
+                      </div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="font-semibold text-gray-900">₹{holding.ltp}</div>
-                    <div className={`text-sm ${isProfitable ? 'text-green-600' : 'text-red-600'}`}>
-                      {isProfitable ? '+' : ''}{pnlPercent}%
+                    <div className="font-semibold text-gray-900">
+                      ₹{holding.ltp}
+                    </div>
+                    <div
+                      className={`text-sm ${
+                        isProfitable ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {isProfitable ? "+" : ""}
+                      {pnlPercent}%
                     </div>
                   </div>
                 </div>
@@ -193,8 +184,12 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <div className="text-gray-500">P&L</div>
-                    <div className={`font-medium ${isProfitable ? 'text-green-600' : 'text-red-600'}`}>
-                      {isProfitable ? '+' : ''}₹{pnl}
+                    <div
+                      className={`font-medium ${
+                        isProfitable ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {isProfitable ? "+" : ""}₹{pnl}
                     </div>
                   </div>
                   <div>
@@ -205,7 +200,7 @@ export default function Dashboard() {
               </div>
             );
           })}
-          
+
           {holdings.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               No holdings found. Start investing to see your portfolio.

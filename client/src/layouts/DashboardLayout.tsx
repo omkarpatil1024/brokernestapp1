@@ -4,16 +4,29 @@ import { useAuthContext } from "@/contexts/AuthContext";
 import { MobileSidebar } from "./MobileSidebar";
 import { DesktopSidebar } from "./DesktopSidebar";
 import { TopBar } from "./TopBar";
+import { OrderPad } from "@/components/order-pad";
+import { OrderPadProvider, useOrderPad } from "@/contexts/OrderPadContext";
+import { FabOrderModal } from "@/components/fab-order-modal";
+import { FabOrderProvider, useFabOrder } from "@/contexts/FabOrderContext";
 import { DraggableFAB } from "@/components/draggable-fab";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export function DashboardLayout({ children }: DashboardLayoutProps) {
+function DashboardLayoutContent({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { logout } = useAuthContext();
   const location = useLocation();
+  const { isOrderPadOpen, selectedStock, defaultOrderType, closeOrderPad } =
+    useOrderPad();
+  const {
+    isFabModalOpen,
+    selectedStock: fabStock,
+    orderType: fabOrderType,
+    openFabModal,
+    closeFabModal,
+  } = useFabOrder();
 
   const handleLogout = () => {
     logout();
@@ -37,16 +50,36 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onLogout={handleLogout}
         />
 
-    {/* <OrderPad
-        isOpen={orderPadOpen}
-        onClose={() => setOrderPadOpen(false)}
-        stock={selectedStock}
-        defaultOrderType={defaultOrderType}
-      /> */}
+        <OrderPad
+          isOpen={isOrderPadOpen}
+          onClose={closeOrderPad}
+          stock={selectedStock}
+          defaultOrderType={defaultOrderType}
+        />
 
-<DraggableFAB onQuickBuy={() => {}} onQuickSell={() => {}} />
+        <FabOrderModal
+          isOpen={isFabModalOpen}
+          onClose={closeFabModal}
+          orderType={fabOrderType}
+          stock={fabStock}
+        />
+
+        <DraggableFAB
+          onQuickBuy={() => openFabModal("BUY")}
+          onQuickSell={() => openFabModal("SELL")}
+        />
         <main className="flex-1">{children}</main>
       </div>
     </div>
+  );
+}
+
+export function DashboardLayout(props: DashboardLayoutProps) {
+  return (
+    <OrderPadProvider>
+      <FabOrderProvider>
+        <DashboardLayoutContent {...props} />
+      </FabOrderProvider>
+    </OrderPadProvider>
   );
 }
